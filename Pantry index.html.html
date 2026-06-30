@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PantryPlan">
+<meta name="theme-color" content="#1B1D1A">
+<title>PantryPlan — Cook what you have. Buy what you need.</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#1B1D1A; --paper:#23261F; --line:rgba(244,241,234,0.1);
+  --cream:#F4F1EA; --soft:rgba(244,241,234,0.62); --dim:rgba(244,241,234,0.34);
+  --moss:#7C9473; --moss-bright:#9FC18C; --rust:#C8703F; --gold:#D4A24C;
+  --red:#D16659;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--cream);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden;}
+.serif{font-family:'Fraunces',serif;}
+
+/* TEXTURE */
+.grain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");}
+.veg-glow{position:fixed;top:-140px;right:-100px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(124,148,115,0.18),transparent 70%);pointer-events:none;z-index:0;}
+
+/* HEADER */
+.topbar{position:sticky;top:0;z-index:40;background:rgba(27,29,26,0.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Fraunces',serif;font-size:17px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;transition:opacity .15s;}
+.logo:active{opacity:.6;}
+.logo .mark{width:7px;height:7px;border-radius:50%;background:var(--moss-bright);}
+.tagline-mini{font-size:10px;color:var(--dim);letter-spacing:.04em;}
+
+.wrap{max-width:560px;margin:0 auto;padding:0 18px 70px;position:relative;z-index:2;}
+
+/* HERO */
+.hero{padding:38px 0 28px;text-align:left;}
+.eyebrow{font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--moss-bright);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.eyebrow::before{content:'';width:18px;height:1px;background:var(--moss-bright);}
+.hero h1{font-family:'Fraunces',serif;font-size:clamp(32px,8vw,44px);font-weight:600;line-height:1.05;letter-spacing:-.015em;margin-bottom:14px;}
+.hero h1 em{font-style:italic;color:var(--moss-bright);}
+.hero p{font-size:14.5px;color:var(--soft);line-height:1.6;max-width:420px;}
+
+/* STEP NAV */
+.step-track{display:flex;align-items:center;gap:6px;margin:26px 0 22px;}
+.step-dot{flex:1;height:2px;background:var(--line);position:relative;}
+.step-dot.done,.step-dot.active{background:var(--moss-bright);}
+.step-lbl-row{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;}
+.step-lbl-row span.current{color:var(--moss-bright);font-weight:600;}
+
+/* CARDS */
+.panel{background:var(--paper);border:1px solid var(--line);padding:22px 20px;margin-bottom:14px;}
+.panel-label{font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--moss-bright);margin-bottom:14px;}
+
+/* MODE SWITCH */
+.mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+.mode-btn{background:var(--paper);border:1.5px solid var(--line);padding:18px 14px;text-align:left;cursor:pointer;transition:all .15s;}
+.mode-btn.active{border-color:var(--moss-bright);background:rgba(124,148,115,0.08);}
+.mode-btn-icon{font-size:20px;margin-bottom:8px;}
+.mode-btn-txt{font-family:'Fraunces',serif;font-size:14px;font-weight:600;color:var(--cream);margin-bottom:3px;}
+.mode-btn-sub{font-size:11px;color:var(--dim);line-height:1.4;}
+.mode-btn.active .mode-btn-sub{color:var(--soft);}
+
+/* PHOTO UPLOAD */
+.photo-zone{border:1.5px dashed var(--line);padding:34px 20px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;}
+.photo-zone:hover{border-color:var(--moss-bright);background:rgba(124,148,115,0.04);}
+.photo-zone-icon{font-size:30px;margin-bottom:10px;opacity:.7;}
+.photo-zone-txt{font-size:13px;color:var(--soft);font-weight:500;margin-bottom:4px;}
+.photo-zone-sub{font-size:11px;color:var(--dim);}
+.photo-preview{width:100%;max-height:280px;object-fit:cover;display:block;margin-bottom:12px;}
+.photo-input{display:none;}
+
+/* CHIPS / ITEMS */
+.item-chip-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px;}
+.item-chip{display:flex;align-items:center;gap:7px;background:rgba(124,148,115,0.1);border:1px solid rgba(124,148,115,0.3);padding:7px 8px 7px 13px;font-size:12.5px;color:var(--cream);border-radius:2px;}
+.item-chip button{background:none;border:none;color:var(--dim);font-size:14px;cursor:pointer;line-height:1;padding:2px;}
+.item-chip button:hover{color:var(--red);}
+.add-item-row{display:flex;gap:8px;margin-top:12px;}
+.add-item-row input{flex:1;background:rgba(244,241,234,0.04);border:1px solid var(--line);color:var(--cream);font-family:'Inter',sans-serif;font-size:13px;padding:10px 12px;outline:none;}
+.add-item-row input:focus{border-color:var(--moss-bright);}
+.add-item-row input::placeholder{color:var(--dim);}
+.add-item-row button{background:var(--moss);border:none;color:var(--bg);font-weight:600;font-size:13px;padding:0 16px;cursor:pointer;white-space:nowrap;}
+
+/* FORM FIELDS */
+.field{margin-bottom:16px;}
+.field:last-child{margin-bottom:0;}
+.field-label{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;display:block;}
+.field input[type=text],.field input[type=number]{width:100%;background:rgba(244,241,234,0.04);border:1px solid var(--line);color:var(--cream);font-family:'Inter',sans-serif;font-size:14px;padding:11px 13px;outline:none;-moz-appearance:textfield;}
+.field input:focus{border-color:var(--moss-bright);}
+.field input::placeholder{color:var(--dim);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pill-row{display:flex;gap:7px;flex-wrap:wrap;}
+.pill{background:rgba(244,241,234,0.04);border:1px solid var(--line);color:var(--soft);font-size:12px;font-weight:500;padding:8px 14px;cursor:pointer;border-radius:20px;transition:all .15s;}
+.pill.active{background:var(--moss);border-color:var(--moss);color:var(--bg);font-weight:600;}
+
+/* BUTTONS */
+.btn-primary{width:100%;background:var(--moss-bright);color:#15170F;border:none;font-family:'Fraunces',serif;font-size:15px;font-weight:600;letter-spacing:-.005em;padding:16px;cursor:pointer;margin-top:6px;transition:opacity .2s;}
+.btn-primary:hover{opacity:.9;}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed;}
+.btn-ghost{width:100%;background:none;border:1px solid var(--line);color:var(--soft);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;padding:13px;cursor:pointer;}
+.btn-ghost:hover{border-color:var(--moss-bright);color:var(--cream);}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;}
+
+/* LOADING */
+.loader{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 20px;text-align:center;}
+.loader-spin{width:38px;height:38px;border:2px solid var(--line);border-top-color:var(--moss-bright);border-radius:50%;animation:spin 0.9s linear infinite;margin-bottom:18px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loader-txt{font-family:'Fraunces',serif;font-size:15px;font-style:italic;color:var(--soft);}
+
+/* RESULTS */
+.result-hero{padding:8px 0 18px;}
+.result-hero .eyebrow{margin-bottom:10px;}
+.result-hero h2{font-family:'Fraunces',serif;font-size:24px;font-weight:600;line-height:1.2;margin-bottom:8px;}
+.budget-strip{display:flex;align-items:center;gap:14px;background:var(--paper);border:1px solid var(--line);padding:16px 18px;margin-bottom:16px;}
+.budget-num{font-family:'Fraunces',serif;font-size:26px;font-weight:600;color:var(--moss-bright);}
+.budget-meta{font-size:11.5px;color:var(--dim);line-height:1.5;}
+.budget-meta strong{color:var(--soft);}
+
+.day-card{background:var(--paper);border:1px solid var(--line);margin-bottom:10px;overflow:hidden;}
+.day-head{padding:13px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.day-name{font-family:'Fraunces',serif;font-size:14.5px;font-weight:600;}
+.day-meal{font-size:12px;color:var(--soft);margin-top:2px;}
+.day-toggle{font-size:10.5px;color:var(--moss-bright);font-weight:600;letter-spacing:.03em;white-space:nowrap;flex-shrink:0;margin-left:10px;}
+.day-body{padding:0 18px 16px;display:none;border-top:1px solid var(--line);padding-top:14px;}
+.day-body.open{display:block;}
+.uses-row{font-size:11.5px;color:var(--moss-bright);margin-bottom:4px;}
+.recipe-meta{font-size:11px;color:var(--dim);margin:10px 0 4px;}
+.servings-toggle{display:flex;align-items:center;gap:7px;margin:12px 0 4px;}
+.servings-toggle-lbl{font-size:11px;color:var(--dim);}
+.servings-btn{background:rgba(244,241,234,0.04);border:1px solid var(--line);color:var(--soft);font-size:11.5px;font-weight:600;padding:5px 11px;cursor:pointer;}
+.servings-btn.active{background:var(--moss);border-color:var(--moss);color:var(--bg);}
+.unused-label{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+.unused-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;}
+.unused-chip{background:rgba(212,162,76,0.1);border:1px solid rgba(212,162,76,0.3);color:var(--cream);font-size:12px;padding:5px 12px;border-radius:14px;}
+.unused-suggestion{font-size:12.5px;color:var(--soft);line-height:1.55;font-style:italic;}
+.recipe-section-label{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:16px 0 9px;}
+.recipe-ingredients{display:flex;flex-direction:column;gap:0;}
+.recipe-ing-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px;}
+.recipe-ing-row:last-child{border-bottom:none;}
+.recipe-ing-amt{color:var(--soft);font-weight:500;}
+.recipe-steps{display:flex;flex-direction:column;gap:11px;}
+.recipe-step{display:flex;gap:11px;font-size:13px;line-height:1.55;color:var(--soft);}
+.recipe-step-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:rgba(212,162,76,0.15);color:var(--gold);font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;}
+
+.section-divider{display:flex;align-items:center;gap:10px;margin:22px 0 14px;}
+.section-divider span{font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);white-space:nowrap;}
+.section-divider .ln{flex:1;height:1px;background:var(--line);}
+
+.shop-cat{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin:16px 0 8px;}
+.shop-cat:first-child{margin-top:0;}
+.shop-row{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--line);}
+.shop-row:last-child{border-bottom:none;}
+.shop-find-btn{font-size:11px;font-weight:600;color:var(--moss-bright);text-decoration:none;white-space:nowrap;padding:4px 9px;border:1px solid rgba(124,148,115,0.35);flex-shrink:0;}
+.shop-find-btn:hover{background:rgba(124,148,115,0.1);}
+.supermarket-select{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;}
+.supermarket-select-label{font-size:11px;color:var(--dim);font-weight:500;}
+.supermarket-pills{display:flex;gap:7px;}
+.supermarket-pill{background:rgba(244,241,234,0.04);border:1px solid var(--line);color:var(--soft);font-size:11.5px;font-weight:500;padding:6px 12px;cursor:pointer;border-radius:20px;}
+.supermarket-pill.active{background:var(--moss);border-color:var(--moss);color:var(--bg);font-weight:600;}
+.shop-check{width:18px;height:18px;border:1.5px solid var(--dim);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.shop-check.checked{background:var(--moss-bright);border-color:var(--moss-bright);}
+.shop-check.checked::after{content:'✓';color:#15170F;font-size:11px;font-weight:700;}
+.shop-iname{font-size:13.5px;flex:1;}
+.shop-iname.struck{text-decoration:line-through;color:var(--dim);}
+.shop-price{font-size:12px;color:var(--dim);}
+
+.pantry-used-tag{display:inline-block;font-size:10px;background:rgba(124,148,115,0.15);color:var(--moss-bright);padding:2px 8px;border-radius:10px;margin-left:7px;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--paper);border:1px solid var(--moss-bright);color:var(--cream);font-size:13px;font-weight:500;padding:11px 22px;transition:transform .3s ease;z-index:400;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+.return-banner{background:rgba(124,148,115,0.1);border:1px solid rgba(124,148,115,0.3);padding:14px 16px;margin:14px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.return-banner-txt{font-size:12.5px;color:var(--cream);flex:1;min-width:180px;}
+.return-banner-actions{display:flex;gap:8px;}
+.return-banner-btn{background:none;border:1px solid var(--line);color:var(--soft);font-size:11.5px;font-weight:600;padding:7px 13px;cursor:pointer;white-space:nowrap;}
+.return-banner-btn.primary{background:var(--moss-bright);border-color:var(--moss-bright);color:#15170F;}
+
+.screen{display:none;}
+.screen.active{display:block;}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div class="veg-glow"></div>
+
+<div class="topbar">
+  <div class="logo" onclick="goHome()" role="button" tabindex="0" style="cursor:pointer;"><span class="mark"></span>PantryPlan</div>
+  <div class="tagline-mini">Cook what you have</div>
+</div>
+
+<div class="wrap">
+
+  <!-- SCREEN 1: INPUT -->
+  <div class="screen active" id="screen-input">
+    <div class="hero">
+      <div class="eyebrow" id="modeEyebrow">A weekly meal plan, built around your fridge</div>
+      <h1 id="modeHeadline">What's in your<br><em>kitchen</em> right now?</h1>
+      <p id="modeSub">Snap a photo or list what you've already got. We'll plan your week around it — and only ask you to buy what's actually missing.</p>
+    </div>
+
+    <div class="mode-switch" id="modeSwitch">
+      <button class="mode-btn active" data-mode="pantry" onclick="setMode('pantry')">
+        <div class="mode-btn-icon">🥕</div>
+        <div class="mode-btn-txt">Use My Pantry</div>
+        <div class="mode-btn-sub">Cook what I have first</div>
+      </button>
+      <button class="mode-btn" data-mode="quick" onclick="setMode('quick')">
+        <div class="mode-btn-icon">⚡</div>
+        <div class="mode-btn-txt">Quick List</div>
+        <div class="mode-btn-sub">Just budget + family size</div>
+      </button>
+    </div>
+
+    <div class="panel" id="pantryPanel">
+      <div class="panel-label">📷 Your Pantry</div>
+      <div id="photoZone" class="photo-zone" onclick="document.getElementById('photoInput').click()">
+        <div class="photo-zone-icon">🥕</div>
+        <div class="photo-zone-txt">Tap to photograph your fridge or pantry</div>
+        <div class="photo-zone-sub">Or skip and just type what you have below</div>
+      </div>
+      <input type="file" accept="image/*" capture="environment" class="photo-input" id="photoInput">
+      <div id="itemsList" class="item-chip-row"></div>
+      <div class="add-item-row">
+        <input type="text" id="manualItemInput" placeholder="Add an item manually e.g. eggs, rice, spinach">
+        <button onclick="addManualItem()">Add</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-label">🎯 Your Week</div>
+      <div class="field">
+        <label class="field-label" id="budgetLabel">Weekly grocery budget (for what's missing)</label>
+        <input type="number" id="budgetInput" placeholder="e.g. 35" inputmode="decimal">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">People</label>
+          <input type="number" id="peopleInput" placeholder="e.g. 2" value="1" inputmode="numeric">
+        </div>
+        <div class="field">
+          <label class="field-label">Days</label>
+          <div class="pill-row" id="durationPills">
+            <button class="pill active" data-d="7">7</button>
+            <button class="pill" data-d="3">3</button>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Goal for this week</label>
+        <div class="pill-row" id="goalPills">
+          <button class="pill active" data-g="balanced">Balanced</button>
+          <button class="pill" data-g="waste">Use it all up</button>
+          <button class="pill" data-g="protein">High protein</button>
+          <button class="pill" data-g="budget">Spend less</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="generateBtn" onclick="generatePlan()">PLAN MY WEEK →</button>
+  </div>
+
+  <!-- SCREEN 2: LOADING -->
+  <div class="screen" id="screen-loading">
+    <div class="loader">
+      <div class="loader-spin"></div>
+      <div class="loader-txt" id="loaderText">Looking through your pantry...</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: RESULTS -->
+  <div class="screen" id="screen-results">
+    <div class="result-hero">
+      <div class="eyebrow">Your week, planned</div>
+      <h2 id="resultHeadline">Here's what you're cooking</h2>
+    </div>
+
+    <div class="budget-strip">
+      <div class="budget-num" id="budgetRemaining">£0</div>
+      <div class="budget-meta">left of your budget<br><strong id="budgetUsedLine">£0 of £0 to buy</strong></div>
+    </div>
+
+    <div id="daysContainer"></div>
+    <div class="panel" id="unusedItemsPanel" style="display:none;"></div>
+
+    <div class="section-divider"><span>Shopping List — Only What's Missing</span><div class="ln"></div></div>
+
+    <div class="supermarket-select">
+      <div class="supermarket-select-label">Find items at</div>
+      <div class="supermarket-pills">
+        <button class="supermarket-pill active" data-store="tesco" onclick="setSupermarket('tesco')">Tesco</button>
+        <button class="supermarket-pill" data-store="sainsburys" onclick="setSupermarket('sainsburys')">Sainsbury's</button>
+        <button class="supermarket-pill" data-store="asda" onclick="setSupermarket('asda')">Asda</button>
+      </div>
+    </div>
+
+    <div class="panel" id="shopListPanel"></div>
+
+    <button class="btn-ghost" onclick="openAllInSupermarket()" style="margin-bottom:10px;">🛒 Open All Items at <span id="openAllStoreLabel">Tesco</span></button>
+
+    <div class="btn-row">
+      <button class="btn-ghost" onclick="startOver()">↺ Start Over</button>
+      <button class="btn-ghost" onclick="copyShopList()">📋 Copy List</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let pantryItems = [];
+let uploadedImageBase64 = null;
+let selectedDuration = 7;
+let selectedGoal = 'balanced';
+let currentPlan = null;
+let currentMode = 'pantry';
+
+const STORAGE_KEY = 'pantryplan_state_v1';
+const VISIT_KEY = 'pantryplan_visits';
+
+function savePlanState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      currentPlan, pantryItems, selectedDuration, selectedGoal, currentMode,
+      savedAt: Date.now()
+    }));
+  } catch (e) {}
+}
+
+function loadSavedState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) { return null; }
+}
+
+function trackVisit() {
+  try {
+    const visits = JSON.parse(localStorage.getItem(VISIT_KEY) || '[]');
+    const today = new Date().toDateString();
+    if (visits[visits.length - 1] !== today) visits.push(today);
+    localStorage.setItem(VISIT_KEY, JSON.stringify(visits.slice(-30)));
+    return visits.length;
+  } catch (e) { return 1; }
+}
+
+function initApp() {
+  const visitCount = trackVisit();
+  const saved = loadSavedState();
+  if (saved && saved.currentPlan && visitCount > 1) {
+    showReturningUserBanner(saved);
+  }
+}
+
+function showReturningUserBanner(saved) {
+  const daysAgo = Math.round((Date.now() - (saved.savedAt || Date.now())) / 86400000);
+  const banner = document.createElement('div');
+  banner.className = 'return-banner';
+  banner.innerHTML = `
+    <div class="return-banner-txt">Welcome back 👋 You have a saved plan from ${daysAgo === 0 ? 'today' : daysAgo === 1 ? 'yesterday' : daysAgo + ' days ago'}.</div>
+    <div class="return-banner-actions">
+      <button class="return-banner-btn primary" onclick="restoreSavedPlan()">View It</button>
+      <button class="return-banner-btn" onclick="this.closest('.return-banner').remove()">Start Fresh</button>
+    </div>`;
+  document.querySelector('.wrap').prepend(banner);
+}
+
+function restoreSavedPlan() {
+  const saved = loadSavedState();
+  if (!saved || !saved.currentPlan) return;
+  currentPlan = saved.currentPlan;
+  pantryItems = saved.pantryItems || [];
+  selectedDuration = saved.selectedDuration || 7;
+  selectedGoal = saved.selectedGoal || 'balanced';
+  currentMode = saved.currentMode || 'pantry';
+  renderItems();
+  document.querySelector('.return-banner')?.remove();
+  renderResults();
+  showScreen('screen-results');
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  const pantryPanel = document.getElementById('pantryPanel');
+  const eyebrow = document.getElementById('modeEyebrow');
+  const headline = document.getElementById('modeHeadline');
+  const sub = document.getElementById('modeSub');
+  const budgetLabel = document.getElementById('budgetLabel');
+  const genBtn = document.getElementById('generateBtn');
+
+  if (mode === 'pantry') {
+    pantryPanel.style.display = 'block';
+    eyebrow.textContent = 'A weekly meal plan, built around your fridge';
+    headline.innerHTML = "What's in your<br><em>kitchen</em> right now?";
+    sub.textContent = "Snap a photo or list what you've already got. We'll plan your week around it — and only ask you to buy what's actually missing.";
+    budgetLabel.textContent = 'Weekly grocery budget (for what\'s missing)';
+    genBtn.textContent = 'PLAN MY WEEK →';
+  } else {
+    pantryPanel.style.display = 'none';
+    eyebrow.textContent = 'A budget shopping list in seconds';
+    headline.innerHTML = "Just tell us your<br><em>budget</em>";
+    sub.textContent = "No pantry photo needed. Give us your budget and family size — we'll build a full week of healthy meals and a complete shopping list.";
+    budgetLabel.textContent = 'Weekly grocery budget';
+    genBtn.textContent = 'GET MY SHOPPING LIST →';
+  }
+}
+
+// Photo handling
+document.getElementById('photoInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    uploadedImageBase64 = ev.target.result;
+    const zone = document.getElementById('photoZone');
+    zone.innerHTML = `<img src="${uploadedImageBase64}" class="photo-preview"><div class="photo-zone-txt">Tap to retake</div>`;
+    identifyPantryItems(uploadedImageBase64);
+  };
+  reader.readAsDataURL(file);
+});
+
+async function identifyPantryItems(base64Image) {
+  const zone = document.getElementById('photoZone');
+  const existingImg = zone.querySelector('img');
+  showToast('Looking at your photo...');
+  if (existingImg) {
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'photoLoadingNote';
+    loadingDiv.className = 'photo-zone-sub';
+    loadingDiv.style.color = 'var(--moss-bright)';
+    loadingDiv.textContent = 'Reading items from photo...';
+    zone.appendChild(loadingDiv);
+  }
+  const base64Data = base64Image.split(',')[1];
+  const mediaType = base64Image.split(';')[0].split(':')[1];
+  try {
+    const res = await fetch('/api/vision', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ image: base64Data, mediaType })
+    });
+    const data = await res.json();
+    const items = data.items || [];
+    items.forEach(item => addItem(item));
+    showToast(`Found ${items.length} items!`);
+  } catch (e) {
+    showToast('Could not read photo — add items manually below');
+  } finally {
+    document.getElementById('photoLoadingNote')?.remove();
+  }
+}
+
+function addItem(name) {
+  const trimmed = name.trim();
+  if (!trimmed) return;
+  if (pantryItems.some(it => it.toLowerCase() === trimmed.toLowerCase())) return;
+  pantryItems.push(trimmed);
+  renderItems();
+}
+function removeItem(idx) {
+  pantryItems.splice(idx, 1);
+  renderItems();
+}
+function addManualItem() {
+  const inp = document.getElementById('manualItemInput');
+  const val = inp.value.trim();
+  if (!val) return;
+  addItem(val);
+  inp.value = '';
+}
+document.getElementById('manualItemInput').addEventListener('keypress', e => {
+  if (e.key === 'Enter') addManualItem();
+});
+function renderItems() {
+  document.getElementById('itemsList').innerHTML = pantryItems.map((item, i) =>
+    `<div class="item-chip">${item}<button onclick="removeItem(${i})">×</button></div>`
+  ).join('');
+}
+
+document.getElementById('durationPills').addEventListener('click', e => {
+  if (!e.target.dataset.d) return;
+  document.querySelectorAll('#durationPills .pill').forEach(p => p.classList.remove('active'));
+  e.target.classList.add('active');
+  selectedDuration = parseInt(e.target.dataset.d);
+});
+document.getElementById('goalPills').addEventListener('click', e => {
+  if (!e.target.dataset.g) return;
+  document.querySelectorAll('#goalPills .pill').forEach(p => p.classList.remove('active'));
+  e.target.classList.add('active');
+  selectedGoal = e.target.dataset.g;
+});
+
+function goHome() {
+  showScreen('screen-input');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+const loaderMsgs = [
+  'Looking through your pantry...',
+  'Working out what pairs well...',
+  'Building meals around what you have...',
+  'Checking what\'s actually missing...',
+  'Pricing the gaps within budget...'
+];
+
+async function generatePlan() {
+  const budget = parseFloat(document.getElementById('budgetInput').value);
+  let people = parseInt(document.getElementById('peopleInput').value) || 1;
+  people = Math.min(12, Math.max(1, people));
+
+  if (isNaN(budget) || budget < 3) { showToast('Enter a weekly budget'); return; }
+  if (currentMode === 'pantry' && pantryItems.length === 0) { showToast('Add at least a few pantry items, or switch to Quick List'); return; }
+
+  showScreen('screen-loading');
+  let msgIdx = 0;
+  const loaderMsgsForMode = currentMode === 'pantry' ? loaderMsgs : [
+    'Planning a week of meals...',
+    'Balancing your budget...',
+    'Building your shopping list...',
+    'Pricing everything out...'
+  ];
+  const loaderEl = document.getElementById('loaderText');
+  loaderEl.textContent = loaderMsgsForMode[0];
+  const loaderInterval = setInterval(() => {
+    msgIdx = (msgIdx + 1) % loaderMsgsForMode.length;
+    loaderEl.textContent = loaderMsgsForMode[msgIdx];
+  }, 1800);
+
+  const goalText = {
+    balanced: 'a balanced mix of nutrition and value',
+    waste: currentMode === 'pantry' ? 'using up as much of their existing pantry as possible to minimise food waste' : 'simple meals with minimal food waste',
+    protein: 'hitting a high protein intake across meals',
+    budget: 'spending as little as possible'
+  }[selectedGoal];
+
+  let prompt;
+  if (currentMode === 'pantry') {
+    prompt = `Practical home cook and budget meal planner. Be concise — this must generate fast.
+Pantry items: ${pantryItems.join(', ')}.
+Plan ${selectedDuration} days of meals for ${people} ${people === 1 ? 'person' : 'people'}, prioritising ${goalText}. Budget for missing items: £${budget}.
+
+Rules: use pantry items where possible; only buy what's missing; total stays at/under budget; one dinner per day; group shopping by category; schedule perishable pantry items (fresh meat/fish/dairy/greens) in Day 1-2; list any unused pantry items honestly.
+
+Return ONLY valid JSON, no extra text:
+{
+  "headline": "Short punchy headline",
+  "totalEstimated": 18.50,
+  "days": [
+    {"day": "Day 1", "meal": "Chicken and rice stir fry", "usesFromPantry": ["rice", "chicken"], "needsToBuy": ["soy sauce"], "cookTime": "20 min", "servings": ${people}, "ingredients": [{"item": "Chicken breast", "amount": "300g"}, {"item": "Rice", "amount": "200g"}], "steps": ["Cook rice per packet.", "Stir-fry chicken 6-8 min.", "Add sauce, serve over rice."]}
+  ],
+  "categories": {
+    "Fruit and Veg": [{"name": "Broccoli", "price": 0.99, "checked": false}],
+    "Meat and Fish": [], "Dairy and Eggs": [], "Grains and Carbs": [], "Tinned and Dry": [], "Condiments": [], "Other": []
+  },
+  "unusedItems": ["oats"],
+  "unusedSuggestion": "Short sentence."
+}
+Keep steps to 3-4 short sentences max per recipe. Keep ingredient lists to essentials only (3-5 items). Scale amounts for ${people} ${people === 1 ? 'person' : 'people'}. Only include categories with items. totalEstimated must match sum of prices and stay at/under £${budget}. Empty unusedItems array if all pantry used.`;
+  } else {
+    prompt = `Practical home cook and budget meal planner. Be concise — this must generate fast.
+Plan ${selectedDuration} days of healthy meals for ${people} ${people === 1 ? 'person' : 'people'} from scratch, prioritising ${goalText}. Budget: £${budget}.
+
+Rules: complete shopping list for all meals; total stays at/under budget; one dinner per day; group shopping by category; maximise variety/nutrition within budget.
+
+Return ONLY valid JSON, no extra text:
+{
+  "headline": "Short punchy headline",
+  "totalEstimated": 32.50,
+  "days": [
+    {"day": "Day 1", "meal": "Chicken and rice stir fry", "usesFromPantry": [], "needsToBuy": ["chicken", "rice", "soy sauce"], "cookTime": "20 min", "servings": ${people}, "ingredients": [{"item": "Chicken breast", "amount": "300g"}, {"item": "Rice", "amount": "200g"}], "steps": ["Cook rice per packet.", "Stir-fry chicken 6-8 min.", "Add sauce, serve over rice."]}
+  ],
+  "categories": {
+    "Fruit and Veg": [{"name": "Broccoli", "price": 0.99, "checked": false}],
+    "Meat and Fish": [], "Dairy and Eggs": [], "Grains and Carbs": [], "Tinned and Dry": [], "Condiments": [], "Other": []
+  }
+}
+Keep steps to 3-4 short sentences max per recipe. Keep ingredient lists to essentials only (3-5 items). Scale amounts for ${people} ${people === 1 ? 'person' : 'people'}. Only include categories with items. totalEstimated must match sum of prices and stay at/under £${budget}.`;
+  }
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ prompt, max_tokens: 2800, stream: true })
+    });
+
+    if (!res.ok || !res.body) throw new Error('Request failed');
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let buffer = '';
+    let lastDayCount = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // keep incomplete line for next chunk
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const jsonStr = line.slice(6).trim();
+        if (!jsonStr || jsonStr === '[DONE]') continue;
+        try {
+          const evt = JSON.parse(jsonStr);
+          if (evt.type === 'content_block_delta' && evt.delta && evt.delta.text) {
+            fullText += evt.delta.text;
+            // Count how many "day" keys have appeared so far for live progress
+            const dayMatches = fullText.match(/"day"\s*:/g);
+            const dayCount = dayMatches ? dayMatches.length : 0;
+            if (dayCount > lastDayCount) {
+              lastDayCount = dayCount;
+              clearInterval(loaderInterval);
+              loaderEl.textContent = `Planning day ${dayCount} of ${selectedDuration}...`;
+            }
+          }
+        } catch (e) { /* ignore partial/malformed SSE lines */ }
+      }
+    }
+
+    const raw = fullText.trim();
+    let parsed = null;
+    try { parsed = JSON.parse(raw); }
+    catch { const m = raw.match(/\{[\s\S]+\}/); if (m) parsed = JSON.parse(m[0]); }
+    if (!parsed) throw new Error('parse failed');
+
+    currentPlan = { ...parsed, budget, people, duration: selectedDuration, mode: currentMode };
+    clearInterval(loaderInterval);
+    renderResults();
+    showScreen('screen-results');
+    savePlanState();
+  } catch (e) {
+    clearInterval(loaderInterval);
+    showToast('Something went wrong — try again');
+    showScreen('screen-input');
+  }
+}
+
+function scaleAmount(amount, multiplier) {
+  if (multiplier === 1) return amount;
+  const scaleNum = n => { const s = n * multiplier; return Number.isInteger(s) ? s : Math.round(s * 10) / 10; };
+  // Handle ranges like "2-3 tbsp"
+  const rangeMatch = amount.match(/^(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)(\s*)(.*)$/);
+  if (rangeMatch) {
+    return `${scaleNum(parseFloat(rangeMatch[1]))}-${scaleNum(parseFloat(rangeMatch[2]))}${rangeMatch[3]}${rangeMatch[4]}`;
+  }
+  // Handle single leading number
+  const match = amount.match(/^(\d+(?:\.\d+)?)(\s*)(.*)$/);
+  if (!match) return amount;
+  return `${scaleNum(parseFloat(match[1]))}${match[2]}${match[3]}`;
+}
+
+function setDayMultiplier(i, mult) {
+  if (!currentPlan.dayMultipliers) currentPlan.dayMultipliers = {};
+  currentPlan.dayMultipliers[i] = mult;
+  renderResults();
+  savePlanState();
+}
+
+function renderResults() {
+  const p = currentPlan;
+  if (!p.dayMultipliers) p.dayMultipliers = {};
+  document.getElementById('resultHeadline').textContent = p.headline || "Here's what you're cooking";
+
+  const total = p.totalEstimated || 0;
+  const remaining = Math.max(0, p.budget - total);
+  document.getElementById('budgetRemaining').textContent = `£${remaining.toFixed(2)}`;
+  document.getElementById('budgetUsedLine').innerHTML = `<strong>£${total.toFixed(2)}</strong> of £${p.budget} to buy`;
+
+  const daysHtml = (p.days || []).map((d, i) => {
+    const mult = p.dayMultipliers[i] || 1;
+    const usesTag = d.usesFromPantry && d.usesFromPantry.length
+      ? `<div class="uses-row">🥕 Using: ${d.usesFromPantry.join(', ')}</div>` : '';
+    const needsTag = d.needsToBuy && d.needsToBuy.length
+      ? `<div style="font-size:11.5px;color:var(--gold);">🛒 Buying: ${d.needsToBuy.join(', ')}</div>` : '';
+    const servingsShown = d.servings ? Math.round(d.servings * mult * 10) / 10 : null;
+    const metaTag = (d.cookTime || d.servings)
+      ? `<div class="recipe-meta">${d.cookTime ? `⏱ ${d.cookTime}` : ''}${d.cookTime && d.servings ? ' · ' : ''}${d.servings ? `🍽 Serves ${servingsShown}` : ''}</div>` : '';
+    const servingsToggle = `
+      <div class="servings-toggle">
+        <span class="servings-toggle-lbl">Portions:</span>
+        <button class="servings-btn ${mult===1?'active':''}" onclick="setDayMultiplier(${i},1)">1×</button>
+        <button class="servings-btn ${mult===1.5?'active':''}" onclick="setDayMultiplier(${i},1.5)">1.5×</button>
+        <button class="servings-btn ${mult===2?'active':''}" onclick="setDayMultiplier(${i},2)">2×</button>
+      </div>`;
+    const ingredientsHtml = (d.ingredients && d.ingredients.length)
+      ? `<div class="recipe-section-label">Ingredients</div><div class="recipe-ingredients">${d.ingredients.map(ing => `<div class="recipe-ing-row"><span>${ing.item}</span><span class="recipe-ing-amt">${scaleAmount(ing.amount, mult)}</span></div>`).join('')}</div>` : '';
+    const stepsHtml = (d.steps && d.steps.length)
+      ? `<div class="recipe-section-label">Method</div><div class="recipe-steps">${d.steps.map((s, si) => `<div class="recipe-step"><span class="recipe-step-num">${si+1}</span><span>${s}</span></div>`).join('')}</div>` : '';
+    return `
+      <div class="day-card">
+        <div class="day-head" onclick="toggleDay(${i})">
+          <div><div class="day-name">${d.day}</div><div class="day-meal">${d.meal}</div></div>
+          <div class="day-toggle" id="dayToggle${i}">View Recipe +</div>
+        </div>
+        <div class="day-body" id="dayBody${i}">
+          ${usesTag}
+          ${needsTag}
+          ${metaTag}
+          ${servingsToggle}
+          ${ingredientsHtml}
+          ${stepsHtml}
+        </div>
+      </div>`;
+  }).join('');
+  document.getElementById('daysContainer').innerHTML = daysHtml;
+
+  // Unused pantry items
+  const unusedEl = document.getElementById('unusedItemsPanel');
+  if (unusedEl) {
+    if (p.unusedItems && p.unusedItems.length) {
+      unusedEl.style.display = 'block';
+      unusedEl.innerHTML = `
+        <div class="unused-label">🗄 Also in your kitchen, not used this week</div>
+        <div class="unused-chips">${p.unusedItems.map(it => `<span class="unused-chip">${it}</span>`).join('')}</div>
+        ${p.unusedSuggestion ? `<div class="unused-suggestion">${p.unusedSuggestion}</div>` : ''}
+      `;
+    } else {
+      unusedEl.style.display = 'none';
+    }
+  }
+
+  let shopHtml = '';
+  Object.entries(p.categories || {}).forEach(([cat, items]) => {
+    if (!items || !items.length) return;
+    shopHtml += `<div class="shop-cat">${cat}</div>`;
+    items.forEach((item, idx) => {
+      const searchUrl = buildSupermarketSearchUrl(item.name);
+      shopHtml += `
+        <div class="shop-row">
+          <div class="shop-check ${item.checked ? 'checked' : ''}" onclick="toggleShopItem('${cat}', ${idx})"></div>
+          <div class="shop-iname ${item.checked ? 'struck' : ''}">${item.name}</div>
+          <div class="shop-price">£${(item.price || 0).toFixed(2)}</div>
+          <a href="${searchUrl}" target="_blank" class="shop-find-btn" title="Find at ${currentSupermarketLabel()}">Find →</a>
+        </div>`;
+    });
+  });
+  if (!shopHtml) shopHtml = '<div style="color:var(--dim);font-size:13px;text-align:center;padding:20px 0;">Nothing to buy — you already have everything! 🎉</div>';
+  document.getElementById('shopListPanel').innerHTML = shopHtml;
+}
+
+const SUPERMARKETS = {
+  tesco: { label: 'Tesco', searchUrl: q => `https://www.tesco.com/groceries/en-GB/search?query=${encodeURIComponent(q)}` },
+  sainsburys: { label: "Sainsbury's", searchUrl: q => `https://www.sainsburys.co.uk/gol-ui/SearchResults/${encodeURIComponent(q)}` },
+  asda: { label: 'Asda', searchUrl: q => `https://groceries.asda.com/search/${encodeURIComponent(q)}` }
+};
+let selectedSupermarket = 'tesco';
+
+function currentSupermarketLabel() {
+  return SUPERMARKETS[selectedSupermarket].label;
+}
+function buildSupermarketSearchUrl(itemName) {
+  // Strip quantities/sizes for a cleaner search term, e.g. "Chicken thighs 500g" -> "Chicken thighs"
+  const cleaned = itemName.replace(/\s*\d+(\.\d+)?\s*(g|kg|ml|l|x\d+|pack|tin|tins)\b.*$/i, '').trim() || itemName;
+  return SUPERMARKETS[selectedSupermarket].searchUrl(cleaned);
+}
+function setSupermarket(store) {
+  selectedSupermarket = store;
+  document.querySelectorAll('.supermarket-pill').forEach(p => p.classList.toggle('active', p.dataset.store === store));
+  const lbl = document.getElementById('openAllStoreLabel');
+  if (lbl) lbl.textContent = currentSupermarketLabel();
+  renderResults();
+}
+function openAllInSupermarket() {
+  const p = currentPlan;
+  const allItems = Object.values(p.categories || {}).flat().filter(item => !item.checked);
+  if (!allItems.length) { showToast('Nothing left to find — all items checked off!'); return; }
+  if (allItems.length > 8 && !confirm(`This will open ${allItems.length} browser tabs, one per item. Continue?`)) return;
+  allItems.forEach((item, i) => {
+    setTimeout(() => window.open(buildSupermarketSearchUrl(item.name), '_blank'), i * 120);
+  });
+}
+
+function toggleDay(i) {
+  const body = document.getElementById('dayBody' + i);
+  const toggle = document.getElementById('dayToggle' + i);
+  body.classList.toggle('open');
+  toggle.textContent = body.classList.contains('open') ? 'Hide Recipe −' : 'View Recipe +';
+}
+
+function toggleShopItem(cat, idx) {
+  currentPlan.categories[cat][idx].checked = !currentPlan.categories[cat][idx].checked;
+  renderResults();
+}
+
+function copyShopList() {
+  const p = currentPlan;
+  let text = `🛒 PANTRYPLAN SHOPPING LIST\n£${(p.totalEstimated||0).toFixed(2)} of £${p.budget} budget\n\n`;
+  Object.entries(p.categories || {}).forEach(([cat, items]) => {
+    if (!items || !items.length) return;
+    text += `${cat.toUpperCase()}\n`;
+    items.forEach(item => { text += `- ${item.name} (£${(item.price||0).toFixed(2)})\n`; });
+    text += '\n';
+  });
+  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'));
+}
+
+function startOver() {
+  pantryItems = [];
+  uploadedImageBase64 = null;
+  currentPlan = null;
+  localStorage.removeItem(STORAGE_KEY);
+  document.getElementById('itemsList').innerHTML = '';
+  document.getElementById('budgetInput').value = '';
+  document.getElementById('photoZone').innerHTML = `
+    <div class="photo-zone-icon">🥕</div>
+    <div class="photo-zone-txt">Tap to photograph your fridge or pantry</div>
+    <div class="photo-zone-sub">Or skip and just type what you have below</div>`;
+  document.getElementById('photoInput').value = '';
+  setMode('pantry');
+  showScreen('screen-input');
+}
+
+initApp();
+</script>
+</body>
+</html>
